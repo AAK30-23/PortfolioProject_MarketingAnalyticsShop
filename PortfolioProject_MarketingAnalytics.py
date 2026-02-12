@@ -1,7 +1,7 @@
 import pandas as pd
 import pyodbc
-import nltk  # обработка естественного языка
-from nltk.sentiment.vader import SentimentIntensityAnalyzer  # анализатор тональности
+import nltk  # обработка языка
+from nltk.sentiment.vader import SentimentIntensityAnalyzer  # анализатор настроений
 
 
 # Получение данных из SQL Server
@@ -29,15 +29,15 @@ customer_reviews_df = fetch_data_from_sql()
 sia = SentimentIntensityAnalyzer()
 
 
-# Функция для расчета тональности текста
+# Функция для расчета настроения текста
 def calculate_sentiment(review):
-    # Получение оценок тональности для текста отзыва
+    # Получение оценок настроения для текста отзыва
     sentiment = sia.polarity_scores(review)
     # Возвращаем compound-оценку (нормированная от -1 до 1)
     return sentiment['compound']
 
 
-# Функция для категоризации тональности с учетом оценки (Rating)
+# Функция для категоризации настроений с учетом оценки 
 def categorize_sentiment(score, rating):
     # Положительная тональность текста
     if score > 0.05:
@@ -48,7 +48,7 @@ def categorize_sentiment(score, rating):
         else:
             return 'Mixed Negative'  # Низкая оценка, но положительный текст
 
-    # Отрицательная тональность текста
+    # Отрицательные настроения текста
     elif score < -0.05:
         if rating <= 2:
             return 'Negative'  # Низкая оценка и отрицательный текст
@@ -57,7 +57,7 @@ def categorize_sentiment(score, rating):
         else:
             return 'Mixed Positive'  # Высокая оценка, но отрицательный текст
 
-    # Нейтральная тональность текста
+    # Нейтральные настроения текста
     else:
         if rating >= 4:
             return 'Positive'  # Высокая оценка при нейтральном тексте
@@ -67,28 +67,29 @@ def categorize_sentiment(score, rating):
             return 'Neutral'  # Нейтральная оценка и нейтральный текст
 
 
-# Функция для группировки оценок тональности в диапазоны
+# Функция для группировки оценок настроений в диапазоны
 def sentiment_bucket(score):
     if score >= 0.5:
-        return '0.5 to 1.0'  # Сильный позитив
+        return '0.5 to 1.0'  
     elif 0.0 <= score < 0.5:
-        return '0.0 to 0.49'  # Слабый позитив
+        return '0.0 to 0.49'  
     elif -0.5 <= score < 0.0:
-        return '-0.49 to 0.0'  # Слабый негатив
+        return '-0.49 to 0.0' 
     else:
-        return '-1.0 to -0.5'  # Сильный негатив
+        return '-1.0 to -0.5' 
 
 
-# Применение анализа тональности ко всем отзывам
+# Применение анализа настроений ко всем отзывам
 customer_reviews_df['SentimentScore'] = customer_reviews_df['ReviewText'].apply(calculate_sentiment)
 
-# Категоризация отзывов с учетом оценки и тональности текста
+# Категоризация отзывов с учетом оценки и настроения текста
 customer_reviews_df['SentimentCategory'] = customer_reviews_df.apply(
     lambda row: categorize_sentiment(row['SentimentScore'], row['Rating']), axis=1)
 
-# Группировка оценки тональности в диапазоны
+# Группировка оценки настроений в диапазоны
 customer_reviews_df['SentimentBucket'] = customer_reviews_df['SentimentScore'].apply(sentiment_bucket)
 
 print(customer_reviews_df.head())
+
 
 customer_reviews_df.to_csv('fact_customer_reviews_with_sentiment.csv', index=False)
