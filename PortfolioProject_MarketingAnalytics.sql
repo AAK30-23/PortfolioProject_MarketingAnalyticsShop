@@ -1,5 +1,4 @@
--- Выбор данных по таблице dbo.customer_reviews
--- Очищистка ReviewText от двойных пробелов для единообразия данных
+-- Очистка ReviewText от двойных пробелов для единообразия данных
 
 SELECT
 	ReviewID,
@@ -14,7 +13,7 @@ FROM
 
 
 -- Выбор данных по таблице dbo.engagement_data
--- Преобразование к единому виду значений ContentType, преобразование в человекочитаемый вид EngagementDate, разделение ViewsClicksCombined на Views и Clicks
+-- Преобразование к единому виду значений ContentType, преобразование в человекочитаемый вид даты EngagementDate, разделение ViewsClicksCombined на Views и Clicks
 -- Фильтрация записей, исключая новостные рассылки
 
 SELECT
@@ -23,11 +22,11 @@ SELECT
 	ContentID,
 	ProductID,
 	ContentType,
-	UPPER(REPLACE(ContentType, 'Socialmedia', 'SOCIALMEDIA')),
+	UPPER(REPLACE(ContentType, 'Socialmedia', 'SOCIALMEDIA')) AS ContentType,
 	LEFT(ViewsClicksCombined, CHARINDEX('-', ViewsClicksCombined) - 1) AS Views,
 	RIGHT(ViewsClicksCombined, LEN(ViewsClicksCombined) - CHARINDEX('-', ViewsClicksCombined)) AS Clicks,
 	Likes,
-	FORMAT(CONVERT(DATE,EngagementDate), 'dd.MM.yyyy') AS EngagmentDate
+	FORMAT(CONVERT(DATE,EngagementDate), 'dd.MM.yyyy') AS EngagementDate
 FROM 
 	dbo.engagement_data
 WHERE ContentType != 'NewsLetter'
@@ -37,14 +36,15 @@ WHERE ContentType != 'NewsLetter'
 -- Выбор данных по таблице 
 -- Категоризация числовых значений Price к текстовым для упрощения анализа
 
-SELECT ProductID, ProductName, Price,
-
+SELECT 
+	ProductID, 
+	ProductName, 
+	Price,
 	CASE 
 		WHEN Price < 50 THEN 'Low'
 		WHEN Price BETWEEN 50 AND 200 THEN 'Medium'
 		ELSE 'High'
 	END AS PriceCategory
-
 FROM dbo.products
 
 
@@ -65,7 +65,7 @@ LEFT JOIN
 
 
 
--- Поиск дубликатов в dbo.customer_journey
+-- Общее табличное выражение для поиска дубликатов в dbo.customer_journey
 
 WITH DuplicateRecords AS(
 	SELECT
@@ -84,17 +84,15 @@ WITH DuplicateRecords AS(
 		dbo.customer_journey
 )
 
--- Очистка данных dbo.customer_journey (пробелы, регистр)
--- Разделение комбинированных полей
--- Категоризация числовых значений
--- Обработка NULL-значений с заменой на средние
--- Удаление дубликатов
 
 SELECT * 
 FROM DuplicateRecords
 WHERE row_num > 1
 ORDER BY JourneyID;
 
+-- Обработка NULL-значений с заменой на средние
+-- Удаление дубликатов
+-- Выбор окончательных очищенных и стандартизированных данных
 
 SELECT
 	JourneyID,
